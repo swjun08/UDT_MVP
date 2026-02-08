@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block body_class %}template-homepage{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+  <section class="card panel grid-2 reveal">
+    <div class="page-stack">
+      <div>
+        <p class="eyebrow">Local Career School Finder</p>
+        <h1 class="heading-xl">{{ page.hero_title }}</h1>
+      </div>
+      <p class="lead">{{ page.hero_subtitle }}</p>
+      <div class="pill-row">
+        <span class="pill">특성화고 + 마이스터고 통합 탐색</span>
+        <span class="pill">지역 기반 빠른 필터</span>
+        <span class="pill">학교별 상세 정보 제공</span>
+      </div>
+    </div>
+
+    <div class="page-stack">
+      <div class="stats">
+        <article class="stat">
+          <div class="stat__value">{{ total_schools }}</div>
+          <div class="stat__label">등록 학교</div>
+        </article>
+        <article class="stat">
+          <div class="stat__value">{{ total_sidos }}</div>
+          <div class="stat__label">시/도 커버</div>
+        </article>
+        <article class="stat">
+          <div class="stat__value">{{ total_types }}</div>
+          <div class="stat__label">학교 유형</div>
+        </article>
+      </div>
+
+      {% if page.notice %}
+      <div class="card panel">
+        {{ page.notice|richtext }}
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="card panel reveal delay-1">
+    <p class="eyebrow">Find Schools</p>
+    <h2 class="heading-lg">조건을 선택하고 바로 찾아보세요</h2>
+    <form class="page-stack" method="get" action="/schools/">
+      <div class="form-grid">
+        <div class="field field--wide">
+          <label for="school-keyword">키워드</label>
+          <input
+            class="control"
+            type="text"
+            id="school-keyword"
+            name="q"
+            placeholder="학교명, 지역, 학과, 트랙으로 검색"
+          />
+        </div>
+
+        <div class="field">
+          <label for="sido">시/도</label>
+          <select class="control" name="sido" id="sido">
+            <option value="">전체</option>
+            {% for s in sidos %}
+              <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="sigungu">군/구</label>
+          <select class="control" name="sigungu" id="sigungu" disabled>
+            <option value="">전체</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="school-type">학교 유형</label>
+          <select class="control" name="type" id="school-type">
+            <option value="">전체</option>
+            <option value="특성화고">특성화고</option>
+            <option value="마이스터고">마이스터고</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn-primary" type="submit">학교 목록 보기</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<script>
+  const sidoEl = document.getElementById("sido");
+  const sigunguEl = document.getElementById("sigungu");
+
+  async function loadSigungus(sido) {
+    sigunguEl.innerHTML = '<option value="">전체</option>';
+    sigunguEl.disabled = true;
+    if (!sido) return;
+
+    try {
+      const res = await fetch(`/schools/api/sigungus/?sido=${encodeURIComponent(sido)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      (data.sigungus || []).forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        sigunguEl.appendChild(opt);
+      });
+      sigunguEl.disabled = false;
+    } catch (_err) {
+      sigunguEl.disabled = true;
+    }
+  }
+
+  if (sidoEl && sigunguEl) {
+    sidoEl.addEventListener("change", (e) => loadSigungus(e.target.value));
+  }
+</script>
+{% endblock %}

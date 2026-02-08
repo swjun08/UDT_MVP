@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<main class="container">
+  <section class="hero">
+    <div class="hero__text">
+      <h1 class="hero__title">{{ page.hero_title }}</h1>
+      <p class="hero__subtitle">{{ page.hero_subtitle }}</p>
+
+      <form class="search" method="get" action="/schools/">
+        <div class="search__grid">
+          <div class="field">
+            <label>시/도</label>
+            <select name="sido" id="sido">
+              <option value="">전체</option>
+              {% for s in sidos %}
+                <option value="{{ s }}">{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>군/구</label>
+            <select name="sigungu" id="sigungu" disabled>
+              <option value="">전체</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>학교 유형</label>
+            <select name="type">
+              <option value="">전체</option>
+              <option value="특성화고">특성화고</option>
+              <option value="마이스터고">마이스터고</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn" type="submit">검색하기</button>
+      </form>
+    </div>
+
+    <div class="hero__card">
+      <div class="stat">
+        <div class="stat__num">{{ total_schools }}</div>
+        <div class="stat__label">등록 학교</div>
+      </div>
+      <div class="stat">
+        <div class="stat__num">{{ total_sidos }}</div>
+        <div class="stat__label">시/도 커버</div>
+      </div>
+      <div class="stat">
+        <div class="stat__num">{{ total_types }}</div>
+        <div class="stat__label">유형</div>
+      </div>
+
+      {% if page.notice %}
+        <div class="notice">
+          {{ page.notice|richtext }}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+</main>
+
+<script>
+  const sidoEl = document.getElementById("sido");
+  const sigunguEl = document.getElementById("sigungu");
+
+  async function loadSigungus(sido) {
+    sigunguEl.innerHTML = '<option value="">전체</option>';
+    sigunguEl.disabled = true;
+    if (!sido) return;
+
+    const res = await fetch(`/schools/api/sigungus/?sido=${encodeURIComponent(sido)}`);
+    const data = await res.json();
+
+    data.sigungus.forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g;
+      opt.textContent = g;
+      sigunguEl.appendChild(opt);
+    });
+    sigunguEl.disabled = false;
+  }
+
+  sidoEl.addEventListener("change", (e) => loadSigungus(e.target.value));
+</script>
+{% endblock %}

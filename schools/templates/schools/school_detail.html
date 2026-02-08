@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{{ school.name }}{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+  <section class="card panel reveal">
+    <div class="button-row">
+      <a class="btn-ghost" href="{% url 'schools:list' %}">목록으로 돌아가기</a>
+    </div>
+  </section>
+
+  <section class="card panel page-stack reveal delay-1">
+    <div class="pill-row">
+      {% if school.school_type == "마이스터고" %}
+        <span class="type-tag type-tag--meister">{{ school.school_type }}</span>
+      {% else %}
+        <span class="type-tag type-tag--special">{{ school.school_type }}</span>
+      {% endif %}
+      {% if school.establishment %}<span class="pill">{{ school.establishment }}</span>{% endif %}
+      {% if school.track_auto %}<span class="pill">{{ school.track_auto }}</span>{% endif %}
+    </div>
+
+    <h1 class="heading-lg">{{ school.name }}</h1>
+    <p class="lead">{{ school.sido }} {{ school.sigungu }} {{ school.address }} {{ school.address_detail }}</p>
+
+    <div class="kv-grid">
+      <article class="kv">
+        <p class="kv__label">학교 코드</p>
+        <p class="kv__value">{{ school.school_code }}</p>
+      </article>
+      <article class="kv">
+        <p class="kv__label">관할 교육청</p>
+        <p class="kv__value">{{ school.education_office|default:"정보 없음" }}</p>
+      </article>
+      {% if school.homepage %}
+      <article class="kv">
+        <p class="kv__label">홈페이지</p>
+        <p class="kv__value">
+          <a href="{{ school.homepage_url }}" target="_blank" rel="noopener">{{ school.homepage }}</a>
+        </p>
+      </article>
+      {% endif %}
+      <article class="kv">
+        <p class="kv__label">우편번호</p>
+        <p class="kv__value">{{ school.zipcode|default:"정보 없음" }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="grid-2 reveal delay-2">
+    <article class="card panel page-stack">
+      <div>
+        <p class="eyebrow">Departments</p>
+        <h2 class="heading-lg">학과 정보</h2>
+      </div>
+      <p class="lead">{{ school.departments|linebreaksbr }}</p>
+    </article>
+
+    <article class="card panel page-stack">
+      <div>
+        <p class="eyebrow">Contacts</p>
+        <h2 class="heading-lg">연락처</h2>
+      </div>
+      <div class="kv-grid">
+        {% if school.phone_principal %}
+        <article class="kv">
+          <p class="kv__label">대표</p>
+          <p class="kv__value">{{ school.phone_principal }}</p>
+        </article>
+        {% endif %}
+        {% if school.phone_academic %}
+        <article class="kv">
+          <p class="kv__label">교무</p>
+          <p class="kv__value">{{ school.phone_academic }}</p>
+        </article>
+        {% endif %}
+        {% if school.phone_admin %}
+        <article class="kv">
+          <p class="kv__label">행정</p>
+          <p class="kv__value">{{ school.phone_admin }}</p>
+        </article>
+        {% endif %}
+        {% if school.phone_career %}
+        <article class="kv">
+          <p class="kv__label">진로</p>
+          <p class="kv__value">{{ school.phone_career }}</p>
+        </article>
+        {% endif %}
+        {% if school.fax %}
+        <article class="kv">
+          <p class="kv__label">팩스</p>
+          <p class="kv__value">{{ school.fax }}</p>
+        </article>
+        {% endif %}
+      </div>
+    </article>
+  </section>
+
+  <section class="card panel page-stack reveal delay-2">
+    <div>
+      <p class="eyebrow">Programs</p>
+      <h2 class="heading-lg">입학 프로그램</h2>
+      <p class="lead">설명회와 신입생 캠프 일정을 확인하세요.</p>
+    </div>
+
+    {% if programs %}
+      <div class="program-list stagger">
+        {% for p in programs %}
+          <article class="program-item">
+            <div class="pill-row">
+              <span class="pill">{{ p.get_program_type_display }}</span>
+            </div>
+            <h4>{{ p.title }}</h4>
+            <p>
+              {{ p.start_at|date:"Y-m-d H:i" }}
+              {% if p.end_at %}~ {{ p.end_at|date:"Y-m-d H:i" }}{% endif %}
+            </p>
+            {% if p.location_or_link %}<p>장소/링크: {{ p.location_or_link }}</p>{% endif %}
+            {% if p.description %}<p>{{ p.description|linebreaksbr }}</p>{% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">등록된 프로그램이 아직 없습니다.</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

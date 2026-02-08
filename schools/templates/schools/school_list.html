@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}학교 찾기{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+  <section class="card panel reveal">
+    <p class="eyebrow">School Directory</p>
+    <h1 class="heading-lg">지역과 유형으로 직업계고를 찾아보세요</h1>
+    <p class="lead">시/도와 군/구를 조합해 원하는 학교를 빠르게 필터링할 수 있습니다.</p>
+  </section>
+
+  <section class="card panel reveal delay-1">
+    <form class="page-stack" method="get">
+      <div class="form-grid">
+        <div class="field field--wide">
+          <label for="school-keyword">키워드</label>
+          <input
+            class="control"
+            type="text"
+            id="school-keyword"
+            name="q"
+            value="{{ selected.q }}"
+            placeholder="학교명, 지역, 학과, 트랙으로 검색"
+          />
+        </div>
+
+        <div class="field">
+          <label for="sido">시/도</label>
+          <select class="control" name="sido" id="sido">
+            <option value="">전체</option>
+            {% for s in sidos %}
+              <option value="{{ s }}" {% if selected.sido == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="sigungu">군/구</label>
+          <select class="control" name="sigungu" id="sigungu" {% if not selected.sido %}disabled{% endif %}>
+            <option value="">전체</option>
+            {% for g in sigungus %}
+              <option value="{{ g }}" {% if selected.sigungu == g %}selected{% endif %}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="school-type">학교 유형</label>
+          <select class="control" name="type" id="school-type">
+            <option value="">전체</option>
+            <option value="특성화고" {% if selected.type == "특성화고" %}selected{% endif %}>특성화고</option>
+            <option value="마이스터고" {% if selected.type == "마이스터고" %}selected{% endif %}>마이스터고</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn-primary" type="submit">필터 적용</button>
+        <a class="btn-ghost" href="{% url 'schools:list' %}">초기화</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="page-stack reveal delay-2">
+    <div class="result-meta">
+      <p>검색 결과 <strong>{{ total_count }}</strong>개</p>
+      <p>
+        선택됨:
+        {% if selected.q %}키워드 "{{ selected.q }}"{% else %}키워드 없음{% endif %}
+        ·
+        {% if selected.sido %}{{ selected.sido }}{% else %}전체 시/도{% endif %}
+        · {% if selected.sigungu %}{{ selected.sigungu }}{% else %}전체 군/구{% endif %}
+        · {% if selected.type %}{{ selected.type }}{% else %}전체 유형{% endif %}
+      </p>
+    </div>
+
+    {% if schools %}
+      <div class="school-grid stagger">
+        {% for school in schools %}
+          <a class="school-card" href="{% url 'schools:detail' school.school_code %}">
+            {% if school.school_type == "마이스터고" %}
+              <span class="type-tag type-tag--meister">{{ school.school_type }}</span>
+            {% else %}
+              <span class="type-tag type-tag--special">{{ school.school_type }}</span>
+            {% endif %}
+            <h3>{{ school.name }}</h3>
+            <p class="school-card__meta">{{ school.sido }} {{ school.sigungu }}</p>
+            <p class="school-card__meta">{{ school.track_auto|default:"트랙 정보 준비 중" }}</p>
+          </a>
+        {% endfor %}
+      </div>
+
+      {% if page_obj.has_other_pages %}
+      <div class="pager">
+        {% if page_obj.has_previous %}
+          <a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">이전</a>
+        {% endif %}
+        <span class="pill">페이지 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">다음</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    {% else %}
+      <div class="card panel empty-state">
+        <p>조건에 맞는 학교가 없습니다. 필터를 완화해서 다시 검색해보세요.</p>
+      </div>
+    {% endif %}
+  </section>
+</div>
+
+<script>
+  const sidoEl = document.getElementById("sido");
+  const sigunguEl = document.getElementById("sigungu");
+  const selectedSigungu = "{{ selected.sigungu|escapejs }}";
+
+  async function loadSigungus(sido, presetValue = "") {
+    sigunguEl.innerHTML = '<option value="">전체</option>';
+    sigunguEl.disabled = true;
+
+    if (!sido) return;
+
+    try {
+      const res = await fetch(`/schools/api/sigungus/?sido=${encodeURIComponent(sido)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      (data.sigungus || []).forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        if (g === presetValue) opt.selected = true;
+        sigunguEl.appendChild(opt);
+      });
+      sigunguEl.disabled = false;
+    } catch (_err) {
+      sigunguEl.disabled = true;
+    }
+  }
+
+  if (sidoEl && sigunguEl) {
+    sidoEl.addEventListener("change", (e) => loadSigungus(e.target.value));
+    if (sidoEl.value) loadSigungus(sidoEl.value, selectedSigungu);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block body_class %}template-searchresults{% endblock %}
+
+{% block title %}검색{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+  <section class="card panel reveal">
+    <p class="eyebrow">Site Search</p>
+    <h1 class="heading-lg">학교 + 페이지 통합 검색</h1>
+    <p class="lead">학교 정보와 사이트 페이지를 한 번에 검색합니다.</p>
+    <form class="page-stack" action="{% url 'search' %}" method="get">
+      <div class="field">
+        <label for="query">검색어</label>
+        <input class="control" id="query" type="text" name="query"{% if search_query %} value="{{ search_query }}"{% endif %} placeholder="학교명, 페이지 제목 등" />
+      </div>
+      <div class="button-row">
+        <button class="btn-primary" type="submit">검색</button>
+        {% if search_query %}
+        <a class="btn-ghost" href="{% url 'search' %}">초기화</a>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+
+  {% if search_error %}
+  <section class="card panel empty-state reveal delay-1">
+    <p>{{ search_error }}</p>
+  </section>
+  {% endif %}
+
+  {% if search_query and school_results %}
+  <section class="card panel reveal delay-1">
+    <div class="result-meta">
+      <p>학교 검색 결과</p>
+      <a class="btn-ghost" href="{% url 'schools:list' %}?q={{ search_query|urlencode }}">학교 목록에서 더 보기</a>
+    </div>
+    <div class="school-grid stagger">
+      {% for school in school_results %}
+      <a class="school-card" href="{% url 'schools:detail' school.school_code %}">
+        {% if school.school_type == "마이스터고" %}
+        <span class="type-tag type-tag--meister">{{ school.school_type }}</span>
+        {% else %}
+        <span class="type-tag type-tag--special">{{ school.school_type }}</span>
+        {% endif %}
+        <h3>{{ school.name }}</h3>
+        <p class="school-card__meta">{{ school.sido }} {{ school.sigungu }}</p>
+        <p class="school-card__meta">{{ school.track_auto|default:"트랙 정보 준비 중" }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if search_results %}
+  <section class="card panel reveal delay-1">
+    <div class="result-meta">
+      <p>페이지 검색 결과</p>
+      <p>{{ search_results.paginator.count }}개</p>
+    </div>
+    <div class="search-result-list stagger">
+      {% for result in search_results %}
+      <article class="search-result-item">
+        <h3><a href="{% pageurl result %}">{{ result }}</a></h3>
+        {% if result.search_description %}
+        <p>{{ result.search_description }}</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    <div class="pager">
+      {% if search_results.has_previous %}
+      <a href="{% url 'search' %}?query={{ search_query|urlencode }}&amp;page={{ search_results.previous_page_number }}">이전</a>
+      {% endif %}
+      {% if search_results.has_next %}
+      <a href="{% url 'search' %}?query={{ search_query|urlencode }}&amp;page={{ search_results.next_page_number }}">다음</a>
+      {% endif %}
+    </div>
+  </section>
+  {% elif search_query and not school_results %}
+  <section class="card panel empty-state reveal delay-1">
+    <p>검색 결과가 없습니다. 다른 키워드로 시도해보세요.</p>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

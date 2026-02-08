@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.python-version
+
+# Django / Wagtail runtime files
+db.sqlite3
+media/
+static/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Logs / test artifacts
+*.log
+.coverage
+coverage/
+

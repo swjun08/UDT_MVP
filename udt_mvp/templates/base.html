@@ -1,0 +1,81 @@
+{% load static wagtailcore_tags wagtailuserbar %}
+
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>
+      {% block title %}
+      {% if page %}
+        {% if page.seo_title %}{{ page.seo_title }}{% else %}{{ page.title }}{% endif %}
+      {% else %}
+        우리동네 직업계고 찾기
+      {% endif %}
+      {% endblock %}
+      {% block title_suffix %}
+      {% wagtail_site as current_site %}
+      {% if current_site and current_site.site_name %}- {{ current_site.site_name }}{% endif %}
+      {% endblock %}
+    </title>
+    {% if page and page.search_description %}
+    <meta name="description" content="{{ page.search_description }}" />
+    {% endif %}
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    {% if request.in_preview_panel %}
+    <base target="_blank">
+    {% endif %}
+
+    <link rel="stylesheet" href="{% static 'css/udt_mvp.css' %}" />
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body class="site-shell {% block body_class %}{% endblock %}">
+    {% wagtailuserbar %}
+
+    <div class="site-ribbon">
+      <div class="shell">
+        <p>UDT MVP · 우리동네 직업계고 탐색 베타</p>
+      </div>
+    </div>
+
+    <div class="site-bg" aria-hidden="true">
+      <span class="site-bg__orb site-bg__orb--a"></span>
+      <span class="site-bg__orb site-bg__orb--b"></span>
+      <span class="site-bg__grid"></span>
+    </div>
+
+    <header class="site-header">
+      <div class="shell">
+        <a class="brand" href="/">
+          <span class="brand__mark">UDT</span>
+          <span class="brand__text">우리동네 직업계고</span>
+        </a>
+
+        <nav class="site-nav" aria-label="주요 메뉴">
+          <a href="/" {% if request.path == "/" %}class="is-active"{% endif %}>홈</a>
+          <a href="{% url 'schools:list' %}" {% if request.path|slice:":8" == "/schools" %}class="is-active"{% endif %}>학교 찾기</a>
+          <a href="{% url 'search' %}" {% if request.path|slice:":7" == "/search/" %}class="is-active"{% endif %}>검색</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-main">
+      <div class="shell">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell">
+        <p>UDT MVP · 특성화고/마이스터고 탐색 서비스</p>
+      </div>
+    </footer>
+
+    <script src="{% static 'js/udt_mvp.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>
