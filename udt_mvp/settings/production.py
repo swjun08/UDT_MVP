@@ -33,6 +33,8 @@ database_url = os.environ.get("DATABASE_URL", "").strip()
 if database_url:
     parsed = urlparse(database_url)
     if parsed.scheme.startswith("postgres"):
+        if "django.contrib.postgres" not in INSTALLED_APPS:
+            INSTALLED_APPS.append("django.contrib.postgres")
         query = parse_qs(parsed.query)
         DATABASES["default"] = {
             "ENGINE": "django.db.backends.postgresql",
