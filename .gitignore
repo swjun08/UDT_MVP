@@ -8,7 +8,7 @@ venv/
 # Django / Wagtail runtime files
 db.sqlite3
 media/
-static/
+/static/
 
 # OS / editor
 .DS_Store
@@ -19,4 +19,3 @@ static/
 *.log
 .coverage
 coverage/
-

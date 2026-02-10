@@ -1,0 +1,26 @@
+.container { max-width: 980px; margin: 0 auto; padding: 24px 16px; }
+
+.hero { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 18px; align-items: start; }
+.hero__title { font-size: 40px; line-height: 1.1; margin: 0 0 10px; letter-spacing: -0.02em; }
+.hero__subtitle { font-size: 16px; opacity: .8; margin: 0 0 18px; }
+
+.search { background: #fff; border: 1px solid #e7e7e7; border-radius: 16px; padding: 16px; }
+.search__grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+.field label { font-size: 12px; opacity: .7; display: block; margin-bottom: 6px; }
+.field select { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #ddd; background: #fff; }
+
+.btn { margin-top: 12px; width: 100%; padding: 12px 14px; border-radius: 14px; border: 0; background: #111; color: #fff; font-weight: 700; cursor: pointer; }
+
+.hero__card { background: #fafafa; border: 1px solid #eee; border-radius: 16px; padding: 16px; }
+.stat { padding: 12px; border-radius: 14px; background: #fff; border: 1px solid #eee; margin-bottom: 10px; }
+.stat__num { font-size: 26px; font-weight: 900; }
+.stat__label { font-size: 12px; opacity: .7; }
+
+.notice { margin-top: 12px; font-size: 14px; line-height: 1.6; }
+
+@media (max-width: 860px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero__title { font-size: 32px; }
+  .search__grid { grid-template-columns: 1fr; }
+}
