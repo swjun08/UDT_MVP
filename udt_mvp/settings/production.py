@@ -6,17 +6,42 @@ DEBUG = False
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "change-me-in-production")
 
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
-    if host.strip()
-]
+def _normalize_allowed_hosts(raw_hosts):
+    hosts = []
+    for host in raw_hosts.split(","):
+        value = host.strip()
+        if not value:
+            continue
+        if "://" in value:
+            parsed = urlparse(value)
+            value = parsed.netloc or parsed.path
+        value = value.split("/")[0]
+        if value:
+            hosts.append(value)
+    return hosts
 
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
-    if origin.strip()
-]
+
+def _normalize_csrf_origins(raw_origins):
+    origins = []
+    for origin in raw_origins.split(","):
+        value = origin.strip()
+        if not value:
+            continue
+        if "://" not in value:
+            value = f"https://{value}"
+        parsed = urlparse(value)
+        if parsed.scheme and parsed.netloc:
+            origins.append(f"{parsed.scheme}://{parsed.netloc}")
+    return origins
+
+
+ALLOWED_HOSTS = _normalize_allowed_hosts(
+    os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost")
+)
+
+CSRF_TRUSTED_ORIGINS = _normalize_csrf_origins(
+    os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "")
+)
 
 if os.environ.get("DJANGO_SECURE_COOKIES", "1") == "1":
     SESSION_COOKIE_SECURE = True
