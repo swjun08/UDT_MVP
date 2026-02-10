@@ -68,8 +68,8 @@ CMD set -xe; \
     fi; \
     gunicorn udt_mvp.wsgi:application \
       --bind 0.0.0.0:${PORT} \
-      --workers 2 \
-      --threads 4 \
+      --workers ${GUNICORN_WORKERS:-1} \
+      --threads ${GUNICORN_THREADS:-2} \
       --timeout 120 \
       --access-logfile - \
       --error-logfile -
