@@ -53,12 +53,17 @@ if database_url:
 # Optional sqlite/media path overrides for disk-backed deployments.
 sqlite_path = os.environ.get("SQLITE_PATH", "").strip()
 if sqlite_path and not database_url:
-    os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
+    sqlite_dir = os.path.dirname(sqlite_path)
+    if sqlite_dir:
+        try:
+            os.makedirs(sqlite_dir, exist_ok=True)
+        except PermissionError:
+            # Do not fail hard at import-time; runtime/storage config will surface issues if any.
+            pass
     DATABASES["default"]["NAME"] = sqlite_path
 
 media_root = os.environ.get("DJANGO_MEDIA_ROOT", "").strip()
 if media_root:
-    os.makedirs(media_root, exist_ok=True)
     MEDIA_ROOT = media_root
 
 # Serve static/media from Django when no reverse proxy is present (MVP mode).
