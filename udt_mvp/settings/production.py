@@ -1,5 +1,6 @@
 from .base import *
 import os
+from urllib.parse import parse_qs, urlparse
 
 DEBUG = False
 
@@ -27,9 +28,31 @@ if os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "0") == "1":
 if os.environ.get("DJANGO_USE_X_FORWARDED_PROTO", "1") == "1":
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Prefer managed Postgres when DATABASE_URL is provided.
+database_url = os.environ.get("DATABASE_URL", "").strip()
+if database_url:
+    parsed = urlparse(database_url)
+    if parsed.scheme.startswith("postgres"):
+        query = parse_qs(parsed.query)
+        DATABASES["default"] = {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": (parsed.path or "/")[1:],
+            "USER": parsed.username or "",
+            "PASSWORD": parsed.password or "",
+            "HOST": parsed.hostname or "",
+            "PORT": str(parsed.port or "5432"),
+            "CONN_MAX_AGE": int(os.environ.get("DB_CONN_MAX_AGE", "60")),
+            "OPTIONS": {},
+        }
+        sslmode = query.get("sslmode", [""])[0]
+        if sslmode:
+            DATABASES["default"]["OPTIONS"]["sslmode"] = sslmode
+    else:
+        raise ValueError("Unsupported DATABASE_URL scheme. Use postgres:// or postgresql://")
+
 # Optional sqlite/media path overrides for disk-backed deployments.
 sqlite_path = os.environ.get("SQLITE_PATH", "").strip()
-if sqlite_path:
+if sqlite_path and not database_url:
     os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
     DATABASES["default"]["NAME"] = sqlite_path
 
@@ -41,11 +64,12 @@ if media_root:
 # Serve static/media from Django when no reverse proxy is present (MVP mode).
 SERVE_STATIC_IN_APP = os.environ.get("DJANGO_SERVE_STATIC", "1") == "1"
 
-# ManifestStaticFilesStorage is recommended in production, to prevent
-# outdated JavaScript / CSS assets being served from cache
-# (e.g. after a Wagtail upgrade).
-# See https://docs.djangoproject.com/en/6.0/ref/contrib/staticfiles/#manifeststaticfilesstorage
-STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+# Use non-manifest static storage by default for safer MVP deploys.
+# Enable manifest mode only when explicitly requested.
+if os.environ.get("DJANGO_USE_MANIFEST_STATIC", "0") == "1":
+    STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+else:
+    STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 WAGTAILADMIN_BASE_URL = os.environ.get("WAGTAILADMIN_BASE_URL", "http://localhost:8000")
 
